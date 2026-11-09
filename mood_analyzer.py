@@ -9,6 +9,7 @@ This class starts with very simple logic:
   - Convert that score into a mood label
 """
 
+import re
 from typing import List, Dict, Tuple, Optional
 
 from dataset import POSITIVE_WORDS, NEGATIVE_WORDS
@@ -40,20 +41,23 @@ class MoodAnalyzer:
         """
         Convert raw text into a list of tokens the model can work with.
 
-        TODO: Improve this method.
-
-        Right now, it does the minimum:
+        Steps:
           - Strips leading and trailing whitespace
           - Converts everything to lowercase
-          - Splits on spaces
-
-        Ideas to improve:
-          - Remove punctuation
-          - Handle simple emojis separately (":)", ":-(", "🥲", "😂")
-          - Normalize repeated characters ("soooo" -> "soo")
+          - Normalizes repeated characters ("soooo" -> "soo", "!!!" -> "!!")
+          - Keeps text emoticons (":)", ":-(", ":D") as single tokens
+          - Splits emojis ("🥲", "😂") into their own tokens
+          - Removes punctuation, but keeps apostrophes inside words ("can't")
         """
         cleaned = text.strip().lower()
-        tokens = cleaned.split()
+        cleaned = re.sub(r"(.)\1{2,}", r"\1\1", cleaned)
+
+        tokens = re.findall(
+            r"[:;]-?[()dp]"             # text emoticons
+            r"|[a-z0-9]+(?:'[a-z]+)*"   # words and contractions
+            r"|[^\x00-\x7f\s️‍]",  # emojis and other symbols
+            cleaned,
+        )
 
         return tokens
 
