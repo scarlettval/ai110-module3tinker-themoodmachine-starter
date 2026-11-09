@@ -85,11 +85,23 @@ class MoodAnalyzer:
           - Give some words higher weights than others (for example "hate" < "annoyed")
           - Treat emojis or slang (":)", "lol", "💀") as strong signals
         """
+        positive_count, negative_count = self.count_signals(text)
+        return positive_count - negative_count
+
+    def count_signals(self, text: str) -> Tuple[int, int]:
+        """
+        Count positive and negative signals in the text separately.
+
+        Returns (positive_count, negative_count). Keeping the two counts
+        apart lets predict_label spot "mixed" posts, where both kinds of
+        signal show up and would otherwise cancel out in the total score.
+        """
         # Enhancement: negation handling. A negation word directly before a
         # mood word flips its effect, so "not happy" counts as negative and
         # "not bad" counts as positive.
         tokens = self.preprocess(text)
-        score = 0
+        positive_count = 0
+        negative_count = 0
 
         for i, token in enumerate(tokens):
             if token in self.positive_words:
@@ -102,9 +114,12 @@ class MoodAnalyzer:
             if i > 0 and tokens[i - 1] in NEGATION_WORDS:
                 value = -value
 
-            score += value
+            if value > 0:
+                positive_count += 1
+            else:
+                negative_count += 1
 
-        return score
+        return positive_count, negative_count
 
     # ---------------------------------------------------------------------
     # Label prediction
@@ -126,8 +141,14 @@ class MoodAnalyzer:
         Just remember that whatever labels you return should match the labels
         you use in TRUE_LABELS in dataset.py if you care about accuracy.
         """
-        score = self.score_text(text)
+        positive_count, negative_count = self.count_signals(text)
 
+        # Both kinds of signal present means the post has mixed feelings,
+        # even if the total score happens to lean one way.
+        if positive_count > 0 and negative_count > 0:
+            return "mixed"
+
+        score = positive_count - negative_count
         if score > 0:
             return "positive"
         if score < 0:
