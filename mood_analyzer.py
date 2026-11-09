@@ -14,6 +14,12 @@ from typing import List, Dict, Tuple, Optional
 
 from dataset import POSITIVE_WORDS, NEGATIVE_WORDS
 
+# Words that flip the meaning of the mood word right after them.
+NEGATION_WORDS = {
+    "not", "no", "never", "isn't", "wasn't", "don't", "doesn't",
+    "didn't", "can't", "won't", "aren't", "ain't",
+}
+
 
 class MoodAnalyzer:
     """
@@ -79,15 +85,26 @@ class MoodAnalyzer:
           - Give some words higher weights than others (for example "hate" < "annoyed")
           - Treat emojis or slang (":)", "lol", "💀") as strong signals
         """
-        # TODO: Implement this method.
-        #   1. Call self.preprocess(text) to get tokens.
-        #   2. Loop over the tokens.
-        #   3. Increase the score for positive words, decrease for negative words.
-        #   4. Return the total score.
-        #
-        # Hint: if you implement negation, you may want to look at pairs of tokens,
-        # like ("not", "happy") or ("never", "fun").
-        pass
+        # Enhancement: negation handling. A negation word directly before a
+        # mood word flips its effect, so "not happy" counts as negative and
+        # "not bad" counts as positive.
+        tokens = self.preprocess(text)
+        score = 0
+
+        for i, token in enumerate(tokens):
+            if token in self.positive_words:
+                value = 1
+            elif token in self.negative_words:
+                value = -1
+            else:
+                continue
+
+            if i > 0 and tokens[i - 1] in NEGATION_WORDS:
+                value = -value
+
+            score += value
+
+        return score
 
     # ---------------------------------------------------------------------
     # Label prediction
