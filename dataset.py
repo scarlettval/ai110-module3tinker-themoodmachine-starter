@@ -25,6 +25,10 @@ POSITIVE_WORDS = [
     "amazing",
     "hopeful",
     "proud",
+    "best",
+    "lol",
+    "💀",  # slang for "dying of laughter", not sadness
+    "🔥",
 ]
 
 NEGATIVE_WORDS = [
@@ -38,6 +42,10 @@ NEGATIVE_WORDS = [
     "stressed",
     "hate",
     "boring",
+    "failed",
+    "miss",
+    "delayed",
+    "empty",
 ]
 
 # ---------------------------------------------------------------------

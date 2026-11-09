@@ -20,6 +20,10 @@ NEGATION_WORDS = {
     "didn't", "can't", "won't", "aren't", "ain't",
 }
 
+# Emojis that usually signal sarcasm. When one appears, positive words in
+# the post are read as negative ("Love that for me 🙃").
+SARCASM_MARKERS = {"🙃", "🙄"}
+
 
 class MoodAnalyzer:
     """
@@ -118,6 +122,12 @@ class MoodAnalyzer:
                 positive_count += 1
             else:
                 negative_count += 1
+
+        # Enhancement: sarcasm markers. Praise next to an eye-roll emoji is
+        # usually a complaint, so the positive signals count as negative.
+        if any(token in SARCASM_MARKERS for token in tokens):
+            negative_count += positive_count
+            positive_count = 0
 
         return positive_count, negative_count
 
